@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mio J 2014 — Konfigurator Modifikasi 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;1,700&family=Barlow:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><b>MIO J</b> 2014 <span>Konfigurator Modifikasi</span></div>
+  <div class="top-actions">
+    <button id="btn-explode" title="Pisahkan sparepart">Exploded view</button>
+    <button id="btn-night" title="Mode malam">Malam</button>
+    <button id="btn-shot">Screenshot</button>
+    <button id="btn-reset" class="ghost">Reset</button>
+  </div>
+</header>
+
+<main>
+  <section id="stage">
+    <canvas id="c"></canvas>
+    <div id="views">
+      <button data-view="kiri">Kiri</button><button data-view="kanan">Kanan</button>
+      <button data-view="depan">Depan</button><button data-view="belakang">Belakang</button>
+      <button data-view="iso">3/4</button>
+    </div>
+    <div id="tip" hidden></div>
+    <div id="part-info" hidden></div>
+    <p class="disclaimer">Model perkiraan bentuk Mio J 2014 (bukan CAD resmi Yamaha). Untuk visual, bukan acuan ukuran presisi.</p>
+  </section>
+
+  <aside id="panel">
+    <nav class="tabs">
+      <button data-tab="warna" class="on">Warna</button>
+      <button data-tab="sticker">Sticker</button>
+      <button data-tab="kaki">Ban & Shock</button>
+      <button data-tab="lampu">Lampu</button>
+      <button data-tab="part">Sparepart</button>
+      <button data-tab="simpan">Simpan</button>
+    </nav>
+    <div class="tab" id="tab-warna"></div>
+    <div class="tab" id="tab-sticker" hidden></div>
+    <div class="tab" id="tab-kaki" hidden></div>
+    <div class="tab" id="tab-lampu" hidden></div>
+    <div class="tab" id="tab-part" hidden></div>
+    <div class="tab" id="tab-simpan" hidden></div>
+  </aside>
+</main>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
