@@ -68,16 +68,16 @@ export function makeBike(scene) {
   const EXPLODE = {
     'body-kiri': [0, 0.08, 0.45], 'body-kanan': [0, 0.08, -0.45], 'body-depan': [0.40, 0.05, 0],
     'tebeng-dalam': [0.18, 0.20, 0], 'batok': [0.12, 0.38, 0], 'speedometer': [0.05, 0.55, 0],
-    'stang': [0.05, 0.30, 0], 'spion': [0.05, 0.50, 0], 'jok': [0, 0.45, 0], 'behel': [-0.15, 0.55, 0],
+    'stang': [0.03, 0.22, 0], 'spion': [0.02, 0.30, 0], 'jok': [0, 0.38, 0], 'behel': [-0.10, 0.40, 0],
     'cover-tengah': [0, 0.25, 0.25], 'cover-belakang': [-0.30, 0.25, 0], 'cover-bawah': [0, -0.08, 0.35],
-    'dek': [0, 0.12, 0.30], 'spakbor-belakang': [-0.35, -0.05, 0], 'bagasi': [0, 0.30, 0.25],
-    'tangki': [-0.10, 0.25, -0.30], 'aki': [0.05, 0.22, -0.30], 'ecu': [0, 0.30, 0.35],
+    'dek': [0, 0.12, 0.30], 'spakbor-belakang': [-0.35, -0.05, 0], 'bagasi': [0, 0.26, 0.22],
+    'tangki': [-0.08, 0.22, -0.26], 'aki': [0.05, 0.22, -0.30], 'ecu': [0, 0.30, 0.35],
     'rangka': [0, 0, 0], 'standar-tengah': [0, -0.10, 0.30], 'standar-samping': [0, -0.05, 0.35],
     'mesin': [0, -0.05, -0.20], 'kipas': [0, 0, -0.38], 'injeksi': [0.05, 0.18, 0.10],
     'cvt': [0, 0, 0.40], 'filter-udara': [0, 0.20, 0.38], 'kick-starter': [0, -0.05, 0.50],
     'knalpot': [-0.15, -0.05, -0.50], 'shock-belakang': [0, 0.12, 0.28],
     'roda-belakang': [-0.40, 0, 0], 'roda-depan': [0.30, 0, 0],
-    'lampu-depan': [0.30, 0.42, 0], 'drl': [0.55, 0.15, 0], 'lampu-belakang': [-0.45, 0.25, 0], 'sein-depan': [0.45, 0.10, 0],
+    'lampu-depan': [0.30, 0.42, 0], 'drl': [0.55, 0.15, 0], 'lampu-belakang': [-0.32, 0.18, 0], 'sein-depan': [0.30, 0.08, 0],
   };
   const exploders = [];
   for (const [id, list] of Object.entries(objects)) {
