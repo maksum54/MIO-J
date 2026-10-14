@@ -8,12 +8,12 @@ export function makeLights(scene) {
   const G = { depan: new THREE.Group(), drl: new THREE.Group(), belakang: new THREE.Group(), sein: new THREE.Group() };
   const state = { depan: 'standar', drl: 'none', belakang: 'standar', sein: 'standar', on: true };
   const spot = new THREE.SpotLight('#fff6e0', 0, 6, 0.45, 0.6, 1.2);
-  spot.position.set(0.50, 0.93, 0); spot.target.position.set(3, 0, 0);
+  spot.position.set(0.48, 0.89, 0); spot.target.position.set(3, 0, 0);
   const rearGlow = new THREE.PointLight('#ff2a2a', 0, 1.6);
-  rearGlow.position.set(-1.05, 0.70, 0);
+  rearGlow.position.set(-1.02, 0.62, 0);
 
   // Lensa lampu depan (di batok). Profil: trapesium lancip khas Mio J 2014.
-  const headLens = smooth([[0.425, 0.965], [0.472, 0.958], [0.486, 0.915], [0.455, 0.893], [0.42, 0.925]], 40);
+  const headLens = smooth([[0.418, 0.928], [0.462, 0.921], [0.474, 0.879], [0.445, 0.858], [0.412, 0.889]], 40);
 
   function buildDepan() {
     G.depan.clear();
@@ -24,26 +24,26 @@ export function makeLights(scene) {
     G.depan.add(lens);
     if (t === 'standar') {
       const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.018, 16, 10), glow('#ffd98a', on ? 2.2 : 0));
-      bulb.position.set(0.468, 0.928, 0); G.depan.add(bulb);
+      bulb.position.set(0.459, 0.892, 0); G.depan.add(bulb);
       const refl = new THREE.Mesh(new THREE.CircleGeometry(0.04, 24), MAT.chrome);
-      refl.position.set(0.462, 0.928, 0); refl.rotation.y = Math.PI / 2; G.depan.add(refl);
+      refl.position.set(0.453, 0.892, 0); refl.rotation.y = Math.PI / 2; G.depan.add(refl);
       spot.color.set('#ffe2a8'); spot.intensity = on ? 18 : 0;
     } else if (t === 'led') {
       for (const s of [-1, 1]) {
-        const chip = box(0.006, 0.02, 0.05, glow('#ffffff', on ? 4 : 0), 0.478, 0.926, s * 0.04);
+        const chip = box(0.006, 0.02, 0.05, glow('#ffffff', on ? 4 : 0), 0.469, 0.890, s * 0.04);
         G.depan.add(chip);
       }
-      const strip = box(0.004, 0.006, 0.15, glow('#e8f4ff', on ? 3 : 0), 0.474, 0.952, 0);
+      const strip = box(0.004, 0.006, 0.15, glow('#e8f4ff', on ? 3 : 0), 0.464, 0.916, 0);
       G.depan.add(strip);
       spot.color.set('#f2f8ff'); spot.intensity = on ? 30 : 0;
     } else { // projector + angel eye
       for (const s of [-1, 1]) {
         const proj = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.02, 24), MAT.chrome);
-        proj.rotation.z = Math.PI / 2; proj.position.set(0.47, 0.926, s * 0.045); G.depan.add(proj);
+        proj.rotation.z = Math.PI / 2; proj.position.set(0.461, 0.890, s * 0.045); G.depan.add(proj);
         const lensP = new THREE.Mesh(new THREE.CircleGeometry(0.018, 24), glow('#ffffff', on ? 5 : 0));
-        lensP.position.set(0.4805, 0.926, s * 0.045); lensP.rotation.y = Math.PI / 2; G.depan.add(lensP);
+        lensP.position.set(0.4715, 0.890, s * 0.045); lensP.rotation.y = Math.PI / 2; G.depan.add(lensP);
         const ring = new THREE.Mesh(new THREE.TorusGeometry(0.026, 0.003, 8, 32), glow('#7fd3ff', on ? 4 : 0));
-        ring.position.set(0.481, 0.926, s * 0.045); ring.rotation.y = Math.PI / 2; G.depan.add(ring);
+        ring.position.set(0.472, 0.890, s * 0.045); ring.rotation.y = Math.PI / 2; G.depan.add(ring);
       }
       spot.color.set('#f6fbff'); spot.intensity = on ? 40 : 0;
     }
@@ -59,10 +59,10 @@ export function makeLights(scene) {
       const pts = [];
       for (let i = 0; i <= 12; i++) {
         const t = i / 12;
-        const y = 0.80 - t * 0.18;
-        const edge = y >= 0.70 ? 0.517 + (0.80 - y) / 0.10 * 0.043 : 0.56 + (0.70 - y) / 0.10 * 0.025;
-        const x = edge + 0.024;
-        const z = s * (0.025 + t * 0.06);
+        const y = 0.775 - t * 0.17;
+        const edge = y >= 0.70 ? 0.497 + (0.775 - y) / 0.075 * 0.018 : 0.512 + (0.70 - y) / 0.09 * 0.055;
+        const x = edge + 0.022;
+        const z = s * (0.03 + t * 0.065);
         pts.push(new THREE.Vector3(x, y, z));
       }
       const tube = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 24, 0.006, 8), glow(col, state.on ? 3.5 : 0.15));
@@ -74,12 +74,12 @@ export function makeLights(scene) {
   function buildBelakang() {
     G.belakang.clear();
     const t = state.belakang, on = state.on;
-    const prof = smooth([[-0.93, 0.715], [-0.975, 0.70], [-0.99, 0.665], [-0.955, 0.645], [-0.90, 0.66]], 40);
+    const prof = smooth([[-0.895, 0.640], [-0.940, 0.625], [-0.955, 0.590], [-0.920, 0.570], [-0.865, 0.585]], 40);
     const red = t === 'smoke' ? '#5a0d10' : '#b5121b';
     const lensMat = new THREE.MeshPhysicalMaterial({ color: red, emissive: '#ff1a1a', emissiveIntensity: on ? (t === 'standar' ? 0.8 : 2.2) : 0.0, roughness: .15, clearcoat: 1, transparent: t === 'smoke', opacity: t === 'smoke' ? .9 : 1 });
     G.belakang.add(extrude(prof, 0.19, { bevel: 0.01, mat: lensMat }));
     if (t !== 'standar') { // garis LED
-      for (const dy of [0, 0.018]) G.belakang.add(box(0.004, 0.005, 0.15, glow('#ff2020', on ? 5 : 0), -0.988, 0.668 + dy, 0));
+      for (const dy of [0, 0.018]) G.belakang.add(box(0.004, 0.005, 0.15, glow('#ff2020', on ? 5 : 0), -0.953, 0.593 + dy, 0));
     }
     rearGlow.intensity = on ? (t === 'standar' ? 0.5 : 1.4) : 0;
     tag(G.belakang, 'lampu-belakang');
@@ -93,12 +93,12 @@ export function makeLights(scene) {
     for (const s of [-1, 1]) {
       // sein depan: di sisi tebeng depan
       const f = new THREE.Mesh(new THREE.SphereGeometry(0.03, 16, 10), new THREE.MeshPhysicalMaterial({ color: lensCol, emissive: lightCol, emissiveIntensity: on ? 0.6 : 0, roughness: .1, clearcoat: 1 }));
-      f.scale.set(1.2, 0.55, 0.6); f.position.set(0.565, 0.72, s * 0.115);
+      f.scale.set(1.2, 0.55, 0.6); f.position.set(0.508, 0.685, s * 0.155);
       G.sein.add(f);
-      if (t !== 'standar') G.sein.add(box(0.02, 0.006, 0.03, glow(lightCol, on ? 3 : 0), 0.595, 0.72, s * 0.115));
+      if (t !== 'standar') G.sein.add(box(0.02, 0.006, 0.03, glow(lightCol, on ? 3 : 0), 0.535, 0.685, s * 0.155));
       // sein belakang: di ujung lampu belakang
       const r = new THREE.Mesh(new THREE.SphereGeometry(0.022, 16, 10), new THREE.MeshPhysicalMaterial({ color: lensCol, emissive: lightCol, emissiveIntensity: on ? 0.5 : 0, roughness: .1, clearcoat: 1 }));
-      r.scale.set(0.8, 0.6, 1); r.position.set(-0.955, 0.68, s * 0.10);
+      r.scale.set(0.8, 0.6, 1); r.position.set(-0.920, 0.605, s * 0.095);
       G.sein.add(r);
     }
     tag(G.sein, 'sein-depan');

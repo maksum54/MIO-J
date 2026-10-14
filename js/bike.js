@@ -11,9 +11,9 @@ import { SPEC } from './data.js';
 const V = (x, y, z = 0) => new THREE.Vector3(x, y, z);
 
 // Titik referensi (koordinat chassis) untuk perhitungan dampak modifikasi
-const SEAT_PT = V(-0.30, 0.775);
+const SEAT_PT = V(-0.30, 0.722);
 // Sisi bawah body / spakbor di atas roda belakang
-const REAR_ARCH = [V(-0.42, 0.53), V(-0.52, 0.555), V(-0.62, 0.575), V(-0.72, 0.59), V(-0.80, 0.60), V(-0.88, 0.555), V(-0.93, 0.50)];
+const REAR_ARCH = [V(-0.30, 0.455), V(-0.52, 0.505), V(-0.62, 0.520), V(-0.72, 0.545), V(-0.80, 0.540), V(-0.86, 0.520), V(-0.913, 0.470)];
 
 export function makeBike(scene) {
   const root = new THREE.Group();      // posisi di dunia

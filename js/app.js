@@ -202,8 +202,12 @@ function renderStance() {
   if (!stanceBox) return;
   const i = bike.info;
   const warn = [];
-  if (i.jarakBanBelakang < 15) warn.push(`Ban belakang hanya ±${Math.max(i.jarakBanBelakang, 0)} mm dari body/spakbor saat diam. Bisa gesek saat shock tertekan.`);
-  if (i.jarakBanDepan < 12) warn.push(`Ban depan ±${Math.max(i.jarakBanDepan, 0)} mm dari spakbor depan. Cek kelonggaran / ganti spakbor.`);
+  if (i.jarakBanBelakang < 15) warn.push(i.jarakBanBelakang < 0
+    ? `Ban belakang MENABRAK body/spakbor (kurang ${Math.abs(i.jarakBanBelakang)} mm). Ukuran ini tidak muat tanpa ubah spakbor/body.`
+    : `Ban belakang hanya ±${i.jarakBanBelakang} mm dari body/spakbor saat diam. Bisa gesek saat shock tertekan.`);
+  if (i.jarakBanDepan < 12) warn.push(i.jarakBanDepan < 0
+    ? `Ban depan MENABRAK spakbor (kurang ${Math.abs(i.jarakBanDepan)} mm). Perlu spakbor lain atau naikkan jarak.`
+    : `Ban depan ±${i.jarakBanDepan} mm dari spakbor depan. Cek kelonggaran / ganti spakbor.`);
   if (i.lebarBelakang >= 100) warn.push('Ban belakang ≥100 mm: pada matic kecil sering perlu cek bak CVT & knalpot (bisa mentok).');
   if (i.lebarDepan >= 90) warn.push('Ban depan ≥90 mm: cek jarak ke garpu & spakbor.');
   if (i.groundClearance < 100) warn.push(`Ground clearance ±${i.groundClearance} mm: rawan mentok polisi tidur.`);
