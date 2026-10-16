@@ -1,6 +1,7 @@
 // Unit mesin + CVT (swing arm) dan garpu depan Mio J.
 import * as THREE from 'three';
-import { MAT, extrude, smooth, box, cyl, rod, placeRod, springGeo, tag } from './parts.js';
+import { MAT, extrude, smooth, box, cyl, rod, placeRod, springGeo, tag, spline, endRound, skin, mesh } from './parts.js';
+import { loftX } from './body.js';
 
 const V = (x, y, z = 0) => new THREE.Vector3(x, y, z);
 
@@ -50,13 +51,29 @@ export function makeEngineUnit() {
   inj.add(rod(V(-0.06, 0.335, 0.04), V(-0.29, 0.385, 0.09), 0.018, MAT.rubber));
   P['injeksi'] = inj;
 
-  // Bak CVT (sisi kiri), dari crank sampai as roda belakang
-  P['cvt'] = extrude(smooth([[-0.135, 0.305], [-0.205, 0.33], [-0.45, 0.31], [-0.615, 0.295], [-0.69, 0.245], [-0.66, 0.175], [-0.575, 0.16], [-0.30, 0.155], [-0.155, 0.175], [-0.105, 0.235]], 80), 0.065, { bevel: 0.022, zc: 0.105, mat: MAT.alu });
-  // logo / garis CVT
-  P['cvt'].add(box(0.30, 0.008, 0.004, MAT.engine, -0.40, 0.235, 0.142));
+  // Bak CVT (sisi kiri), dari crank sampai as roda belakang: rumah pulley depan besar, belakang lebih kecil
+  const cT = spline([[-0.105, 0.262], [-0.17, 0.322], [-0.26, 0.330], [-0.45, 0.312], [-0.60, 0.298], [-0.69, 0.252]]);
+  const cB = spline([[-0.105, 0.205], [-0.16, 0.168], [-0.30, 0.153], [-0.50, 0.156], [-0.62, 0.168], [-0.69, 0.225]]);
+  const cvtSec = (k, dz, wz) => (x) => {
+    const f = endRound(Math.abs(x + 0.105), 0.06) * endRound(Math.abs(x + 0.69), 0.055), g = Math.sqrt(f);
+    const top = cT(x), bot = cB(x), yc = (top + bot) / 2;
+    return { top: yc + (top - yc) * g * k, bot: yc - (yc - bot) * g * k, yc, w: wz * (0.4 + 0.6 * g), zc: dz, eu: 3, evT: 4, evB: 4 };
+  };
+  P['cvt'] = mesh(loftX({ x0: -0.105, x1: -0.69, n: 70, ring: 48, sec: cvtSec(1, 0.100, 0.036) }), MAT.alu);
+  // tutup luar (lebih terang) + garis
+  P['cvt'].add(mesh(loftX({ x0: -0.13, x1: -0.665, n: 60, ring: 48, sec: cvtSec(0.82, 0.118, 0.026) }), MAT.metal));
+  P['cvt'].add(box(0.26, 0.010, 0.004, MAT.engine, -0.40, 0.245, 0.1445));
+  for (const [x, y] of [[-0.17, 0.30], [-0.17, 0.185], [-0.42, 0.29], [-0.42, 0.172], [-0.64, 0.24]]) { // baut
+    const b = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.006, 0.006, 6).rotateX(Math.PI / 2), MAT.chrome);
+    b.position.set(x, y, 0.137); P['cvt'].add(b);
+  }
 
   // Box filter udara di atas CVT
-  P['filter-udara'] = extrude(smooth([[-0.225, 0.335], [-0.235, 0.415], [-0.335, 0.435], [-0.47, 0.405], [-0.48, 0.335]], 40), 0.08, { bevel: 0.015, zc: 0.09, mat: MAT.black });
+  const fT = spline([[-0.215, 0.36], [-0.25, 0.418], [-0.34, 0.438], [-0.46, 0.41], [-0.485, 0.37]]);
+  P['filter-udara'] = mesh(loftX({ x0: -0.215, x1: -0.485, n: 40, ring: 40, sec: (x) => {
+    const f = endRound(Math.abs(x + 0.215), 0.03) * endRound(Math.abs(x + 0.485), 0.03);
+    return { top: fT(x), bot: 0.33, w: 0.042 * Math.sqrt(f), zc: 0.088, eu: 3.2, evT: 3, evB: 4 };
+  } }), MAT.black);
 
   // Kick starter
   const kick = new THREE.Group();
@@ -68,11 +85,19 @@ export function makeEngineUnit() {
   const kn = new THREE.Group();
   const header = new THREE.CatmullRomCurve3([V(0.07, 0.205, -0.01), V(0.055, 0.165, -0.04), V(-0.10, 0.155, -0.10), V(-0.30, 0.175, -0.12), V(-0.42, 0.215, -0.125)]);
   kn.add(new THREE.Mesh(new THREE.TubeGeometry(header, 40, 0.016, 10), MAT.metal));
-  const silencer = cyl(0.055, 0.045, 0.40, MAT.black, 24); silencer.rotation.z = Math.PI / 2 - 0.12; silencer.position.set(-0.60, 0.235, -0.135);
-  const guard = cyl(0.058, 0.058, 0.26, MAT.chrome, 24, ); guard.scale.set(1, 1, 1); guard.rotation.z = Math.PI / 2 - 0.12; guard.position.set(-0.60, 0.242, -0.15);
-  guard.geometry = new THREE.CylinderGeometry(0.06, 0.06, 0.26, 24, 1, true, Math.PI * 0.9, Math.PI * 0.7);
-  guard.material = MAT.chrome;
-  const tip = cyl(0.02, 0.02, 0.04, MAT.chrome, 16); tip.rotation.z = Math.PI / 2 - 0.12; tip.position.set(-0.815, 0.265, -0.135);
+  const silencer = new THREE.Mesh(new THREE.LatheGeometry([
+    [0, -0.21], [0.03, -0.21], [0.045, -0.20], [0.052, -0.17], [0.056, -0.05], [0.056, 0.12], [0.050, 0.17], [0.028, 0.20], [0, 0.20],
+  ].map(([r, y]) => new THREE.Vector2(r, y)), 40), MAT.black);
+  silencer.castShadow = true;
+  silencer.rotation.z = Math.PI / 2 - 0.12; silencer.position.set(-0.60, 0.235, -0.135);
+  const guard = new THREE.Mesh(new THREE.CylinderGeometry(0.063, 0.063, 0.24, 32, 1, true, Math.PI * 0.95, Math.PI * 0.75), new THREE.MeshStandardMaterial({ color: '#2b2e33', roughness: .45, metalness: .6, side: THREE.DoubleSide }));
+  guard.rotation.z = Math.PI / 2 - 0.12; guard.position.set(-0.56, 0.240, -0.135);
+  for (let i = 0; i < 4; i++) { // lubang protektor
+    const h = new THREE.Mesh(new THREE.CapsuleGeometry(0.006, 0.03, 4, 8), MAT.black);
+    h.rotation.z = Math.PI / 2 - 0.12; h.position.set(-0.49 - i * 0.045, 0.245 + i * 0.0055, -0.199); kn.add(h);
+  }
+  const tip = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.02, 0.04, 20, 1, true), new THREE.MeshStandardMaterial({ color: '#d8dbe0', roughness: .15, metalness: 1, side: THREE.DoubleSide }));
+  tip.rotation.z = Math.PI / 2 - 0.12; tip.position.set(-0.81, 0.262, -0.135);
   kn.add(silencer, guard, tip);
   P['knalpot'] = kn;
 
@@ -137,20 +162,25 @@ export function makeFork() {
 
   // Spakbor depan (busur di atas roda) — dipasang di slider
   const fender = new THREE.Group();
-  const shape = new THREE.Shape();
-  const R1 = 0.262, R2 = 0.272, a0 = 0.35, a1 = 2.55;
-  shape.absarc(0, 0, R2, a0, a1, false);
-  shape.absarc(0, 0, R1, a1, a0, true);
-  const fg = new THREE.ExtrudeGeometry(shape, { depth: 0.10, bevelEnabled: true, bevelThickness: 0.008, bevelSize: 0.006, bevelSegments: 3, curveSegments: 40 });
-  fg.translate(0, 0, -0.05);
-  const fm = new THREE.Mesh(fg, MAT.paintF); fm.castShadow = true;
+  const R1 = 0.262, TH = 0.006, FW = 0.058, a0 = 0.30, a1 = 2.62;
+  const rings = [];
+  for (let i = 0; i <= 60; i++) {
+    const a = a0 + (a1 - a0) * i / 60, ring = [];
+    const e = Math.min(endRound(a - a0, 0.12), endRound(a1 - a, 0.12));
+    const w = FW * (0.82 + 0.18 * e), crown = 0.014;
+    for (let k = 0; k <= 20; k++) { const t = -1 + 2 * k / 20; ring.push([R1 + TH + crown * (1 - t * t), w * t]); }
+    for (let k = 20; k >= 0; k--) { const t = -1 + 2 * k / 20; ring.push([R1 + crown * (1 - t * t), w * t * 0.97]); }
+    rings.push(ring.map(([r, z]) => new THREE.Vector3(Math.cos(a) * r, Math.sin(a) * r, z)));
+  }
+  const fm = mesh(skin(rings), MAT.paintF);
   fender.add(fm);
   fender.userData.innerR = R1;
   lower.add(tag(fender, 'spakbor-depan'));
 
   // Kaliper rem (kiri, di belakang slider)
-  const cal = box(0.05, 0.075, 0.03, MAT.dark, -0.065, 0.07, 0.06);
-  cal.rotation.z = 0.5;
+  const cal = new THREE.Group();
+  const calBody = mesh(loftX({ x0: 0.03, x1: -0.03, n: 12, ring: 24, sec: (x) => ({ top: 0.045, bot: -0.045, w: 0.016 * endRound(Math.min(x + 0.03, 0.03 - x), 0.012), zc: 0, eu: 3, evT: 3, evB: 3 }) }), new THREE.MeshStandardMaterial({ color: '#2a2c30', roughness: .4, metalness: .5 }));
+  cal.add(calBody); cal.position.set(-0.07, 0.065, 0.068); cal.rotation.z = 0.5;
   lower.add(tag(cal, 'kaliper'));
 
   return { upper, lower, fender };

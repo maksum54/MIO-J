@@ -1,7 +1,6 @@
 // Mio J 2014 — konfigurator modifikasi. Scene, UI, simpan & bagikan.
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { makeBike } from './bike.js';
 import { MAT, setPaint } from './parts.js';
 import { applyStickers, ZONES } from './stickers.js';
@@ -39,31 +38,72 @@ const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDraw
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
 const scene = new THREE.Scene();
 const pmrem = new THREE.PMREMGenerator(renderer);
-const envTex = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+
+// Lingkungan studio: ruangan gelap dengan softbox besar → pantulan cat yang realistis
+function studioEnv() {
+  const s = new THREE.Scene();
+  const room = new THREE.Mesh(new THREE.BoxGeometry(24, 12, 24), new THREE.MeshBasicMaterial({ color: new THREE.Color(0.06, 0.065, 0.075), side: THREE.BackSide }));
+  room.position.y = 5; s.add(room);
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(24, 24), new THREE.MeshBasicMaterial({ color: new THREE.Color(0.03, 0.03, 0.035) }));
+  floor.rotation.x = -Math.PI / 2; floor.position.y = -0.01; s.add(floor);
+  const box = (w, h, k, pos, tint = [1, 1, 1]) => {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color(k * tint[0], k * tint[1], k * tint[2]), side: THREE.DoubleSide }));
+    m.position.set(...pos); m.lookAt(0, 0.6, 0); s.add(m);
+  };
+  box(7, 2.2, 7, [0, 7, 0.4]);                      // softbox atas
+  box(1.2, 5, 5, [-5.5, 2.6, 4.5], [1, .97, .92]);  // strip kiri-depan (hangat)
+  box(1.2, 5, 4, [5.5, 2.6, -4.5], [.9, .95, 1]);   // strip kanan-belakang (dingin)
+  box(6, 1.6, 2.4, [7, 1.6, 2]);                    // depan
+  box(6, 1.6, 1.6, [-7, 1.6, -2]);                  // belakang
+  box(10, 0.5, 3, [0, 0.4, 9]);                     // garis horizon kiri
+  box(10, 0.5, 3, [0, 0.4, -9]);                    // garis horizon kanan
+  const t = pmrem.fromScene(s, 0.035).texture;
+  s.traverse(o => { o.geometry && o.geometry.dispose(); o.material && o.material.dispose(); });
+  return t;
+}
+const envTex = studioEnv();
 scene.environment = envTex;
 
-const camera = new THREE.PerspectiveCamera(32, 1, 0.05, 50);
+const BG = new THREE.Color('#2a2e35');
+scene.background = BG.clone();
+scene.fog = new THREE.Fog(BG.clone(), 6, 14);
+
+const camera = new THREE.PerspectiveCamera(30, 1, 0.05, 50);
 const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true; controls.minDistance = 1.2; controls.maxDistance = 7;
 controls.maxPolarAngle = Math.PI * 0.495; controls.target.set(0, 0.5, 0);
 
-const hemi = new THREE.HemisphereLight('#dfe8ff', '#20232a', 0.6); scene.add(hemi);
-const sun = new THREE.DirectionalLight('#ffffff', 2.2);
-sun.position.set(2.5, 4, 2.5); sun.castShadow = true;
-sun.shadow.mapSize.set(2048, 2048); Object.assign(sun.shadow.camera, { left: -2, right: 2, top: 2, bottom: -2 });
+const hemi = new THREE.HemisphereLight('#e6edff', '#2a2622', 0.35); scene.add(hemi);
+const sun = new THREE.DirectionalLight('#fff8ef', 2.0);
+sun.position.set(1.2, 4.5, 1.6); sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -0.0002; sun.shadow.normalBias = 0.02; sun.shadow.radius = 4;
+Object.assign(sun.shadow.camera, { left: -1.6, right: 1.6, top: 1.6, bottom: -1.6, near: 1, far: 9 });
 scene.add(sun);
+const rim = new THREE.DirectionalLight('#cfe0ff', 0.9); rim.position.set(-3, 2, -2.5); scene.add(rim);
 
-const ground = new THREE.Mesh(new THREE.CircleGeometry(6, 64), new THREE.MeshStandardMaterial({ color: '#1a1d22', roughness: .95 }));
+// Lantai studio: gradasi melingkar (terang di tengah) + bayangan kontak lembut di bawah motor
+function radialTex(stops, size = 512) {
+  const c = document.createElement('canvas'); c.width = c.height = size;
+  const g = c.getContext('2d'), gr = g.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+  for (const [o, col] of stops) gr.addColorStop(o, col);
+  g.fillStyle = gr; g.fillRect(0, 0, size, size);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+const floorMat = new THREE.MeshStandardMaterial({ map: radialTex([[0, '#6b717a'], [0.35, '#4a4f57'], [1, '#2a2e35']]), roughness: .78, metalness: 0, envMapIntensity: .5 });
+const ground = new THREE.Mesh(new THREE.CircleGeometry(9, 96), floorMat);
 ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
-const grid = new THREE.GridHelper(8, 32, '#2b3038', '#22262c'); grid.position.y = 0.001; scene.add(grid);
+const contact = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 0.9), new THREE.MeshBasicMaterial({
+  map: radialTex([[0, 'rgba(0,0,0,0.75)'], [0.5, 'rgba(0,0,0,0.35)'], [1, 'rgba(0,0,0,0)']]), transparent: true, depthWrite: false, fog: false }));
+contact.rotation.x = -Math.PI / 2; contact.position.y = 0.002; contact.renderOrder = 1; scene.add(contact);
 
 const bike = makeBike(scene);
 scene.add(bike.root);
 
-const VIEWS = { kiri: [0, 0.7, 3.4], kanan: [0, 0.7, -3.4], depan: [3.2, 0.8, 0], belakang: [-3.2, 0.9, 0], iso: [2.3, 1.25, 2.6] };
-function setView(v) { camera.position.set(...VIEWS[v]); controls.target.set(0, 0.5, 0); controls.update(); }
+const VIEWS = { kiri: [0, 0.62, 3.7], kanan: [0, 0.62, -3.7], depan: [3.5, 0.75, 0], belakang: [-3.5, 0.85, 0], iso: [2.5, 1.05, 2.8] };
+function setView(v) { camera.position.set(...VIEWS[v]); controls.target.set(0, 0.48, 0); controls.update(); }
 setView('iso');
 
 function resize() {
@@ -101,9 +141,12 @@ function applyAll({ stickers = true } = {}) {
 }
 
 function setNight(on) {
-  hemi.intensity = on ? 0.05 : 0.6; sun.intensity = on ? 0.08 : 2.2;
-  scene.environmentIntensity = on ? 0.12 : 1;
-  renderer.toneMappingExposure = on ? 0.9 : 1;
+  hemi.intensity = on ? 0.03 : 0.35; sun.intensity = on ? 0.06 : 2.0; rim.intensity = on ? 0.05 : 0.9;
+  scene.environmentIntensity = on ? 0.1 : 1;
+  renderer.toneMappingExposure = on ? 0.9 : 1.05;
+  const bg = on ? new THREE.Color('#07080a') : BG;
+  scene.background.copy(bg); scene.fog.color.copy(bg);
+  floorMat.color.set(on ? '#2a2c30' : '#ffffff');
   $('#btn-night').classList.toggle('on', on);
 }
 
